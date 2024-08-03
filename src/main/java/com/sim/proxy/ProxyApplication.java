@@ -23,37 +23,29 @@ public class ProxyApplication {
     }
 
     @Bean
-    public ApplicationRunner applicationRunner() {
+    public DefaultCustomerService defaultCustomerService() {
+        return new DefaultCustomerService();
+    }
+
+    @Bean
+    public MyTransactionDetector myTransactionDetector() {
+        return new MyTransactionDetector();
+    }
+
+    @Bean
+    public MyTransactionalBeanPostProcessor myTransactionalBeanPostProcessor(
+            MyTransactionDetector myTransactionDetector
+    ) {
+        return new MyTransactionalBeanPostProcessor(myTransactionDetector);
+    }
+
+
+    @Bean
+    public ApplicationRunner applicationRunner(CustomerService customerService) {
         return new ApplicationRunner() {
             @Override
             public void run(ApplicationArguments args) throws Exception {
-                var target = new DefaultCustomerService();
-
-                var pf = new ProxyFactory();
-                pf.setInterfaces(target.getClass().getInterfaces());
-                pf.setTarget(target);
-                pf.addAdvice(new MethodInterceptor() {
-                    @Override
-                    public Object invoke(MethodInvocation invocation) throws Throwable {
-                        Method method = invocation.getMethod();
-                        Object[] arguments = invocation.getArguments();
-                        System.out.println("calling " + method.getName() + " with arguments [" + arguments + "]");
-                        try {
-                            if (method.getAnnotation(MyTransactional.class) != null) {
-                                System.out.println("starting transaction for " + method.getName());
-                            }
-                            return method.invoke(target, arguments);
-                        } finally {
-                            if (method.getAnnotation(MyTransactional.class) != null) {
-                                System.out.println("finishing transaction for " + method.getName());
-                            }
-                        }
-                    }
-                });
-
-                var proxyInstance = (CustomerService) pf.getProxy(getClass().getClassLoader());
-
-                proxyInstance.create();
+                customerService.create();
             }
         };
     }
