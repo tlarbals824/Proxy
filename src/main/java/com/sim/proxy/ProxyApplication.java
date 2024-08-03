@@ -41,7 +41,7 @@ public class ProxyApplication {
 
 
     @Bean
-    public ApplicationRunner applicationRunner(CustomerService customerService) {
+    public ApplicationRunner applicationRunner(DefaultCustomerService customerService) {
         return new ApplicationRunner() {
             @Override
             public void run(ApplicationArguments args) throws Exception {
